@@ -68,12 +68,10 @@
     .pill { display:inline-block; font-size:12px; padding:2px 8px; border:1px dashed var(--border); border-radius:999px }
     .gallery { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px }
     .gallery img { width:100%; height:100px; object-fit:cover; border-radius:8px; border:1px solid var(--border) }
-.tips { border:1px solid var(--border); border-radius:12px; padding:10px; background:#0b1220; margin-top:10px }
-.tips h4 { margin:0 0 6px; font-size:14px }
-.tips ol, .tips ul { margin:0; padding-left:18px; }
-.tips li { margin:4px 0; font-size:13px; line-height:1.4 }
-.chip { display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid var(--border); font-size:11px; color:var(--muted) }
-
+    .tips { border:1px solid var(--border); border-radius:12px; padding:10px; background:#0b1220; margin-top:10px }
+    .tips h4 { margin:0 0 6px; font-size:14px }
+    .tips ol, .tips ul { margin:0; padding-left:18px; }
+    .tips li { margin:4px 0; font-size:13px; line-height:1.4 }
   </style>
 </head>
 <body>
@@ -111,7 +109,6 @@
     </div>
 
     <div class="grid">
-      <!-- Left column -->
       <div>
         <div class="card">
           <div class="head"><div class="title">Today • <span id="todayLabel"></span></div>
@@ -134,7 +131,6 @@
         </div>
       </div>
 
-      <!-- Middle column -->
       <div>
         <div class="card">
           <div class="head"><div class="title">Personalized session timer</div>
@@ -178,7 +174,6 @@
           </div>
         </div>
 
-        <!-- Mobile bottom controls -->
         <div class="mobile-bar mobile-safe">
           <button id="mStartPause" class="btn-primary" style="flex:1">Start</button>
           <button id="mSkip" class="btn">Skip</button>
@@ -186,7 +181,6 @@
         </div>
       </div>
 
-      <!-- Right column -->
       <div>
         <div class="card">
           <div class="head"><div class="title">Feynman notebook (plain‑language explanation)</div>
@@ -231,7 +225,7 @@
       </div>
     </div>
 
-    <div class="muted" style="margin-top:12px; font-size:12px">Local time: <span id="localTime"></span></div>
+    <div class="muted" style="margin-top:12px; font-size:12px">Local time: <span id="localTime"></span> • Today (local): <span id="todayDebug"></span></div>
   </div>
 
   <script>
@@ -242,52 +236,49 @@
     const fromYMD = (iso) => { const [y,m,day] = iso.split('-').map(Number); return new Date(y, m-1, day); };
     const pad = n => String(n).padStart(2,'0');
     const uid = () => Math.random().toString(36).slice(2,10);
-    const STAGE_TIPS = {
-  pretest: {
-    title:'Pre‑test (retrieval)',
-    bullets:[
-      'Close books. From memory, write a 5–7 sentence Feynman summary.',
-      'List 3 must‑answer questions about this topic.',
-      'Predict 1–2 likely pitfalls or confusions.',
-      'Quick sketch of any key diagram (no peeking).'
-    ]
-  },
-  study: {
-    title:'Targeted study',
-    bullets:[
-      'Open materials only for the gaps you exposed.',
-      'Add 2–3 concrete examples or cases (varied).',
-      'Dual code: draw a tiny diagram/table linking ideas.',
-      'Note definitions & processes for later cloze cards.'
-    ]
-  },
-  retrieval2: {
-    title:'Retrieval round 2',
-    bullets:[
-      'Close materials again. Answer your 3 questions.',
-      'Teach aloud in simple language (as if to a 12‑year‑old).',
-      'Create 3 fresh exam‑style items and answer them.'
-    ]
-  },
-  errorlog: {
-    title:'Error log',
-    bullets:[
-      'For each miss: What I thought → Correct → Why I missed it → Fix.',
-      'Tag errors by concept for later review.'
-    ]
-  },
-  flash: {
-    title:'Flashcards / interleave',
-    bullets:[
-      'Write atomic cards (one fact/process per card).',
-      'Cloze deletions for definitions & formulas.',
-      'Interleave: mix adjacent topics or similar diseases.',
-      'Quick spaced review of any due cards.'
-    ]
-  }
-};
+    function parseTimeRange(str){ if(!str) return null; const [a,b]=str.split(/\s*[–—-]\s*/); const [sh,sm]=a.split(':').map(Number); const [eh,em]=b.split(':').map(Number); const start=sh*60+sm; let end=eh*60+em; if(end<=start) end+=1440; return {startMin:start,endMin:end,durationMin:end-start}; }
 
-function parseTimeRange(str){ if(!str) return null; const [a,b]=str.split(/\s*[–—-]\s*/); const [sh,sm]=a.split(':').map(Number); const [eh,em]=b.split(':').map(Number); const start=sh*60+sm; let end=eh*60+em; if(end<=start) end+=1440; return {startMin:start,endMin:end,durationMin:end-start}; }
+    const STAGE_TIPS = {
+      pretest: { title:'Pre‑test (retrieval)', bullets:[
+        'Close books. From memory, write a 5–7 sentence Feynman summary.',
+        'List 3 must‑answer questions about this topic.',
+        'Predict 1–2 likely pitfalls or confusions.',
+        'Quick sketch of any key diagram (no peeking).'
+      ] },
+      study: { title:'Targeted study', bullets:[
+        'Open materials only for the gaps you exposed.',
+        'Add 2–3 concrete examples or cases (varied).',
+        'Dual code: draw a tiny diagram/table linking ideas.',
+        'Note definitions & processes for later cloze cards.'
+      ] },
+      retrieval2: { title:'Retrieval round 2', bullets:[
+        'Close materials again. Answer your 3 questions.',
+        'Teach aloud in simple language (as if to a 12‑year‑old).',
+        'Create 3 fresh exam‑style items and answer them.'
+      ] },
+      errorlog: { title:'Error log', bullets:[
+        'For each miss: What I thought → Correct → Why I missed it → Fix.',
+        'Tag errors by concept for later review.'
+      ] },
+      flash: { title:'Flashcards / interleave', bullets:[
+        'Write atomic cards (one fact/process per card).',
+        'Cloze deletions for definitions & formulas.',
+        'Interleave: mix adjacent topics or similar diseases.',
+        'Quick spaced review of any due cards.'
+      ] }
+    };
+
+    const MONTHS = {jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+    function parseDateText(txt, year){
+      txt = (txt||'').trim();
+      let m = txt.match(/\b(\d{1,2})[\/\-.](\d{1,2})\b/);
+      if(m){ const d = Number(m[1]), mo = Number(m[2]); return `${year}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+      m = txt.match(/\b(\d{1,2})\s+([A-Za-z]{3,})\b/);
+      if(m){ const d = Number(m[1]); const mon = MONTHS[m[2].slice(0,3).toLowerCase()]; if(mon) return `${year}-${String(mon).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+      m = txt.match(/\b([A-Za-z]{3,})\s+(\d{1,2})\b/);
+      if(m){ const mon = MONTHS[m[1].slice(0,3).toLowerCase()]; const d = Number(m[2]); if(mon) return `${year}-${String(mon).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+      return dateYMD(new Date(txt+' '+year));
+    }
 
     function setLS(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
     function getLS(k,v){ try{ const s=localStorage.getItem(k); return s? JSON.parse(s): v; }catch{ return v } }
@@ -342,7 +333,7 @@ function parseTimeRange(str){ if(!str) return null; const [a,b]=str.split(/\s*[�
         + (state.completed.has(s.id)? '<span class="done">Done</span>':'' )
         + '</div>'
         + '<div class="muted" style="font-size:'+(small? '12px':'13px')+'">'
-        + new Date(s.dateISO).toLocaleDateString(undefined,{month:'short',day:'numeric',weekday: small? undefined : 'short'})
+        + fromYMD(s.dateISO).toLocaleDateString(undefined,{month:'short',day:'numeric',weekday: small? undefined : 'short'})
         + ' • '+s.time+' • '+ (t? t.durationMin: '?') +' min</div>';
       return btn;
     }
@@ -352,6 +343,7 @@ function parseTimeRange(str){ if(!str) return null; const [a,b]=str.split(/\s*[�
       $('#toggleTheme').textContent = state.dark? 'Light':'Dark';
       $('#todayLabel').textContent = new Date().toLocaleDateString(undefined,{weekday:'long', month:'short', day:'numeric'});
       $('#localTime').textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      $('#todayDebug').textContent = todayISO();
 
       const today = todayISO();
       const todays = state.sessions.filter(s=>s.dateISO===today);
@@ -371,7 +363,7 @@ function parseTimeRange(str){ if(!str) return null; const [a,b]=str.split(/\s*[�
         const row = document.createElement('div');
         row.className='row'; row.style.marginBottom='6px'; row.style.alignItems='center';
         row.innerHTML = '<div class="pill" style="width:80px;text-align:center">'
-          + new Date(r.dateISO).toLocaleDateString(undefined,{month:'short',day:'numeric'}) + '</div>'
+          + fromYMD(r.dateISO).toLocaleDateString(undefined,{month:'short',day:'numeric'}) + '</div>'
           + '<div class="col">'+r.title+'</div>';
         const btn = document.createElement('button'); btn.className='btn'; btn.textContent='Done';
         btn.style.background='var(--good)'; btn.style.color='#fff'; btn.onclick=()=>{ state.reviewQueue = state.reviewQueue.filter(x=>x.id!==r.id); persist(); render(); };
@@ -382,7 +374,7 @@ function parseTimeRange(str){ if(!str) return null; const [a,b]=str.split(/\s*[�
         $('#sessionBadge').textContent = sel.category || 'General';
         $('#sessionTitle').textContent = sel.title;
         const t = parseTimeRange(sel.time);
-        $('#sessionMeta').textContent = new Date(sel.dateISO).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}) + ' • ' + sel.time + ' • ' + (t? t.durationMin: '?') + ' min';
+        $('#sessionMeta').textContent = fromYMD(sel.dateISO).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}) + ' • ' + sel.time + ' • ' + (t? t.durationMin: '?') + ' min';
       }
       $('#startPause').textContent = state.running? 'Pause':'Start';
       $('#mStartPause').textContent = state.running? 'Pause':'Start';
@@ -412,11 +404,6 @@ function parseTimeRange(str){ if(!str) return null; const [a,b]=str.split(/\s*[�
         sliders.appendChild(box);
       });
 
-      $('#feynText').value = state.notes[state.selectedSessionId]||'';
-      $('#errorText').value = state.errors[state.selectedSessionId]||'';
-      renderPhotos();
-      renderCards();
-      // stage tips
       const tipHost = document.getElementById('stageTipsList');
       if (tipHost) {
         tipHost.innerHTML='';
@@ -424,6 +411,11 @@ function parseTimeRange(str){ if(!str) return null; const [a,b]=str.split(/\s*[�
         const tips = STAGE_TIPS[curStage]?.bullets || [];
         tips.forEach(t=>{ const li=document.createElement('li'); li.textContent=t; tipHost.appendChild(li); });
       }
+
+      $('#feynText').value = state.notes[state.selectedSessionId]||'';
+      $('#errorText').value = state.errors[state.selectedSessionId]||'';
+      renderPhotos();
+      renderCards();
     }
 
     let tickId = null; let lastTs=null; let acc=0;
@@ -526,7 +518,7 @@ function parseTimeRange(str){ if(!str) return null; const [a,b]=str.split(/\s*[�
         const h2=sec.querySelector('h2')?.textContent||''; const year=Number((h2.match(/(\d{4})/)||[])[1]||new Date().getFullYear());
         Array.from(sec.querySelectorAll('.day')).forEach(day=>{
           const dateStr=day.querySelector('.date')?.textContent?.trim(); if(!dateStr) return;
-          const dateISO=dateYMD(new Date(dateStr+' '+year));
+          const dateISO=parseDateText(dateStr, year);
           Array.from(day.querySelectorAll('.session')).forEach(block=>{
             const timeLabel=block.querySelector('.time label')?.textContent?.trim()||'';
             const m = timeLabel.match(/(\d{2}:\d{2}\s*[–—-]\s*\d{2}:\d{2})/); if(!m) return;
@@ -603,7 +595,7 @@ function parseTimeRange(str){ if(!str) return null; const [a,b]=str.split(/\s*[�
 
     if(state.dark) document.documentElement.classList.add('dark');
     recalcDurations(); render();
-    setInterval(()=>{ $('#localTime').textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) }, 1000);
+    setInterval(()=>{ $('#localTime').textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); $('#todayDebug').textContent = todayISO(); }, 1000);
   </script>
 </body>
 </html>
